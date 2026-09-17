@@ -100,6 +100,33 @@ private:
 
 #endif // JPH_PLATFORM_SWITCH
 
+#if defined(JPH_PLATFORM_SWITCH) && defined(JPH_ENABLE_ASSERTS)
+
+static bool AssertFailedImpl(const char *inExpression, const char *inMessage, const char *inFile, uint inLine)
+{
+	cout << endl << "Jolt assertion failed" << endl;
+	cout << inFile << ":" << inLine << endl;
+	cout << "Expression: " << inExpression << endl;
+	if (inMessage != nullptr)
+		cout << "Message: " << inMessage << endl;
+	cout << "Press + to trigger the breakpoint." << endl;
+	consoleUpdate(nullptr);
+
+	PadState pad;
+	padInitializeDefault(&pad);
+	while (appletMainLoop())
+	{
+		padUpdate(&pad);
+		if ((padGetButtonsDown(&pad) & HidNpadButton_Plus) != 0)
+			break;
+		consoleUpdate(nullptr);
+	}
+
+	return true;
+}
+
+#endif // JPH_PLATFORM_SWITCH && JPH_ENABLE_ASSERTS
+
 // Time step for physics
 constexpr float cDeltaTime = 1.0f / 60.0f;
 
@@ -134,6 +161,9 @@ int main(int argc, char** argv)
 
 	// Install callbacks
 	Trace = TraceImpl;
+#ifdef JPH_PLATFORM_SWITCH
+	JPH_IF_ENABLE_ASSERTS(AssertFailed = AssertFailedImpl;)
+#endif // JPH_PLATFORM_SWITCH
 
 	// Register allocation hook
 	RegisterDefaultAllocator();
@@ -456,6 +486,15 @@ int main(int argc, char** argv)
 					chrono::high_resolution_clock::time_point clock_end = chrono::high_resolution_clock::now();
 					chrono::nanoseconds duration = chrono::duration_cast<chrono::nanoseconds>(clock_end - clock_start);
 					total_duration += duration;
+
+				#ifdef JPH_PLATFORM_SWITCH
+					// Keep long-running Debug benchmarks visibly alive without including console updates in the measured duration.
+					if (iterations == 0 || (iterations + 1) % 50 == 0)
+					{
+						cout << motion_quality_str << ", " << num_threads + 1 << " thread(s): step " << iterations + 1 << " / " << max_iterations << endl;
+						consoleUpdate(nullptr);
+					}
+				#endif // JPH_PLATFORM_SWITCH
 
 				#ifdef JPH_DEBUG_RENDERER
 					if (enable_debug_renderer)

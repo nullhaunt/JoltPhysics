@@ -13,6 +13,8 @@
 	#include <x86intrin.h>
 #elif defined(JPH_CPU_LOONGARCH)
 	#include <larchintrin.h>
+#elif defined(JPH_PLATFORM_SWITCH)
+	#include <switch/arm/counter.h>
 #endif
 
 JPH_NAMESPACE_BEGIN
@@ -29,6 +31,8 @@ JPH_INLINE uint64 GetProcessorTickCount()
 {
 #if defined(JPH_PLATFORM_BLUE)
 	return JPH_PLATFORM_BLUE_GET_TICKS();
+#elif defined(JPH_PLATFORM_SWITCH)
+	return armGetSystemTick();
 #elif defined(JPH_CPU_X86)
 	return __rdtsc();
 #elif defined(JPH_CPU_E2K)
