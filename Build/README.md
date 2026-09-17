@@ -172,6 +172,17 @@ To implement your custom memory allocator override Allocate, Free, Reallocate, A
 </details>
 
 <details>
+	<summary>Nintendo Switch (experimental, devkitPro/libnx)</summary>
+	<ul>
+		<li>Install devkitPro with devkitA64, libnx and the Switch tools.</li>
+		<li>In WSL, set <code>DEVKITPRO</code> to the devkitPro installation directory (normally <code>/opt/devkitpro</code>).</li>
+		<li>From the <code>Build</code> folder run <code>./cmake_switch.sh</code>.</li>
+		<li>Run <code>cmake --build Switch_Debug --target HelloWorld -j $(nproc)</code>.</li>
+	</ul>
+	<p>This bootstrap builds the Jolt library and a Switch ELF. NRO packaging and hardware execution are not part of this step.</p>
+</details>
+
+<details>
 	<summary>macOS</summary>
 	<ul>
 		<li>Install XCode</li>

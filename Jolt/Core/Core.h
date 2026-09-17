@@ -83,6 +83,8 @@
 // Determine platform
 #if defined(JPH_PLATFORM_BLUE)
 	// Correct define already defined, this overrides everything else
+#elif defined(__SWITCH__)
+	#define JPH_PLATFORM_SWITCH
 #elif defined(_WIN32) || defined(_WIN64)
 	#include <winapifamily.h>
 	#if WINAPI_FAMILY == WINAPI_FAMILY_APP
@@ -455,7 +457,7 @@
 	// Creating one should only be a couple of minutes of work if you have the documentation for the platform
 	// (you only need to define JPH_BREAKPOINT, JPH_PLATFORM_BLUE_GET_TICKS, JPH_PLATFORM_BLUE_MUTEX*, JPH_PLATFORM_BLUE_RWLOCK*, JPH_PLATFORM_BLUE_SEMAPHORE* and include the right header).
 	#include <Jolt/Core/PlatformBlue.h>
-#elif defined(JPH_PLATFORM_LINUX) || defined(JPH_PLATFORM_ANDROID) || defined(JPH_PLATFORM_MACOS) || defined(JPH_PLATFORM_IOS) || defined(JPH_PLATFORM_BSD)
+#elif defined(JPH_PLATFORM_LINUX) || defined(JPH_PLATFORM_ANDROID) || defined(JPH_PLATFORM_MACOS) || defined(JPH_PLATFORM_IOS) || defined(JPH_PLATFORM_BSD) || defined(JPH_PLATFORM_SWITCH)
 	#if defined(JPH_CPU_X86)
 		#define JPH_BREAKPOINT	__asm volatile ("int $0x3")
 	#elif defined(JPH_CPU_ARM) || defined(JPH_CPU_RISCV) || defined(JPH_CPU_E2K) || defined(JPH_CPU_PPC) || defined(JPH_CPU_LOONGARCH)
@@ -518,6 +520,8 @@ JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <type_traits>
 #if defined(JPH_COMPILER_MSVC) || (defined(JPH_COMPILER_CLANG) && defined(_MSC_VER)) // MSVC or clang-cl
 	#include <malloc.h> // for alloca
+#elif defined(JPH_PLATFORM_SWITCH)
+	#include <alloca.h>
 #endif
 #if defined(JPH_USE_SSE)
 	#include <immintrin.h>

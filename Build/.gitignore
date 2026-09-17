@@ -4,5 +4,6 @@
 /XCode*
 /MinGW*
 /Ninja*
+/Switch_*
 /Doxygen
 /CoverageReport

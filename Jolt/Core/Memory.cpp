@@ -8,6 +8,9 @@ JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <cstdlib>
 JPH_SUPPRESS_WARNINGS_STD_END
 #include <stdlib.h>
+#ifdef JPH_PLATFORM_SWITCH
+	#include <malloc.h>
+#endif
 
 JPH_NAMESPACE_BEGIN
 
@@ -43,6 +46,9 @@ JPH_ALLOC_SCOPE void *JPH_ALLOC_FN(AlignedAllocate)(size_t inSize, size_t inAlig
 #if defined(JPH_PLATFORM_WINDOWS)
 	// Microsoft doesn't implement posix_memalign
 	return _aligned_malloc(inSize, inAlignment);
+#elif defined(JPH_PLATFORM_SWITCH)
+	// posix_memalign is hidden by newlib when compiling in strict C++ mode
+	return memalign(inAlignment, inSize);
 #else
 	void *block = nullptr;
 	JPH_SUPPRESS_WARNING_PUSH
