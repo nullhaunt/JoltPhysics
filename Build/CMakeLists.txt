@@ -441,6 +441,15 @@ if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 			if (EMSCRIPTEN)
 				target_link_options(HelloWorld PUBLIC -sSTACK_SIZE=1048576 -sINITIAL_MEMORY=134217728)
 			endif()
+			if (NINTENDO_SWITCH)
+				set(HELLO_WORLD_NACP "${CMAKE_CURRENT_BINARY_DIR}/HelloWorld.nacp")
+				nx_generate_nacp(
+					OUTPUT "${HELLO_WORLD_NACP}"
+					NAME "Jolt Physics Hello World"
+					AUTHOR "Jolt Physics"
+					VERSION "${PROJECT_VERSION}")
+				nx_create_nro(HelloWorld NACP "${HELLO_WORLD_NACP}")
+			endif()
 		endif()
 
 		if (TARGET_PERFORMANCE_TEST)

@@ -33,4 +33,4 @@ cmake -S . -B "$BUILD_DIR" -G "Unix Makefiles" \
 	-DJPH_USE_CPU_COMPUTE=OFF \
 	"$@"
 
-echo "Compile by running \"cmake --build $BUILD_DIR --target HelloWorld -j $(nproc)\""
+echo "Compile by running \"cmake --build $BUILD_DIR --target HelloWorld_nro -j $(nproc)\""
