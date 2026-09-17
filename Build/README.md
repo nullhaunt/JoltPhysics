@@ -179,7 +179,7 @@ To implement your custom memory allocator override Allocate, Free, Reallocate, A
 		<li>From the <code>Build</code> folder run <code>./cmake_switch.sh</code>.</li>
 		<li>Run <code>cmake --build Switch_Debug --target HelloWorld_nro -j $(nproc)</code>.</li>
 	</ul>
-	<p>This bootstrap builds the Jolt library, a Switch ELF and <code>HelloWorld.nro</code>. Hardware execution is not part of this step.</p>
+	<p>This bootstrap builds the Jolt library, a Switch ELF and <code>HelloWorld.nro</code>. On hardware, the NRO displays the simulation output and waits for the <code>+</code> button before exiting.</p>
 </details>
 
 <details>

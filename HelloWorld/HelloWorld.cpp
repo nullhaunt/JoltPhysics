@@ -24,6 +24,10 @@
 #include <cstdarg>
 #include <thread>
 
+#ifdef JPH_PLATFORM_SWITCH
+	#include <switch.h>
+#endif
+
 // Disable common warnings triggered by Jolt, you can use JPH_SUPPRESS_WARNING_PUSH / JPH_SUPPRESS_WARNING_POP to store and restore the warning state
 JPH_SUPPRESS_WARNINGS
 
@@ -211,6 +215,17 @@ public:
 // Program entry point
 int main(int argc, char** argv)
 {
+#ifdef JPH_PLATFORM_SWITCH
+	// Show the sample output on the console and keep it visible after the simulation completes.
+	consoleInit(nullptr);
+	padConfigureInput(1, HidNpadStyleSet_NpadStandard);
+	PadState pad;
+	padInitializeDefault(&pad);
+	cout << "Jolt Physics Hello World" << endl;
+	cout << "Initializing physics..." << endl;
+	consoleUpdate(nullptr);
+#endif
+
 	// Register allocation hook. In this example we'll just let Jolt use malloc / free but you can override these if you want (see Memory.h).
 	// This needs to be done before any other Jolt function is called.
 	RegisterDefaultAllocator();
@@ -238,7 +253,9 @@ int main(int argc, char** argv)
 	// We need a job system that will execute physics jobs on multiple threads. Typically
 	// you would implement the JobSystem interface yourself and let Jolt Physics run on top
 	// of your own job scheduler. JobSystemThreadPool is an example implementation.
-	JobSystemThreadPool job_system(cMaxPhysicsJobs, cMaxPhysicsBarriers, thread::hardware_concurrency() - 1);
+	const uint hardware_thread_count = thread::hardware_concurrency();
+	const int worker_thread_count = hardware_thread_count > 1? int(hardware_thread_count - 1) : 0;
+	JobSystemThreadPool job_system(cMaxPhysicsJobs, cMaxPhysicsBarriers, worker_thread_count);
 
 	// This is the max amount of rigid bodies that you can add to the physics system. If you try to add more you'll get an error.
 	// Note: This value is low because this is a simple test. For a real project use something in the order of 65536.
@@ -340,6 +357,9 @@ int main(int argc, char** argv)
 		RVec3 position = body_interface.GetCenterOfMassPosition(sphere_id);
 		Vec3 velocity = body_interface.GetLinearVelocity(sphere_id);
 		cout << "Step " << step << ": Position = (" << position.GetX() << ", " << position.GetY() << ", " << position.GetZ() << "), Velocity = (" << velocity.GetX() << ", " << velocity.GetY() << ", " << velocity.GetZ() << ")" << endl;
+#ifdef JPH_PLATFORM_SWITCH
+		consoleUpdate(nullptr);
+#endif
 
 		// If you take larger steps than 1 / 60th of a second you need to do multiple collision steps in order to keep the simulation stable. Do 1 collision step per 1 / 60th of a second (round up).
 		const int cCollisionSteps = 1;
@@ -364,6 +384,19 @@ int main(int argc, char** argv)
 	// Destroy the factory
 	delete Factory::sInstance;
 	Factory::sInstance = nullptr;
+
+#ifdef JPH_PLATFORM_SWITCH
+	cout << endl << "Simulation complete. Press + to exit." << endl;
+	while (appletMainLoop())
+	{
+		padUpdate(&pad);
+		if ((padGetButtonsDown(&pad) & HidNpadButton_Plus) != 0)
+			break;
+
+		consoleUpdate(nullptr);
+	}
+	consoleExit(nullptr);
+#endif
 
 	return 0;
 }
