@@ -23,7 +23,7 @@ cmake -S . -B "$BUILD_DIR" -G "Unix Makefiles" \
 	-DCMAKE_TOOLCHAIN_FILE="$DEVKITPRO/cmake/Switch.cmake" \
 	-DTARGET_UNIT_TESTS=OFF \
 	-DTARGET_HELLO_WORLD=ON \
-	-DTARGET_PERFORMANCE_TEST=OFF \
+	-DTARGET_PERFORMANCE_TEST=ON \
 	-DTARGET_SAMPLES=OFF \
 	-DTARGET_VIEWER=OFF \
 	-DINTERPROCEDURAL_OPTIMIZATION=OFF \
@@ -33,4 +33,4 @@ cmake -S . -B "$BUILD_DIR" -G "Unix Makefiles" \
 	-DJPH_USE_CPU_COMPUTE=OFF \
 	"$@"
 
-echo "Compile by running \"cmake --build $BUILD_DIR --target HelloWorld_nro -j $(nproc)\""
+echo "Compile by running \"cmake --build $BUILD_DIR --target HelloWorld_nro PerformanceTest_nro -j $(nproc)\""

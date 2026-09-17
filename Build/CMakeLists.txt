@@ -468,6 +468,22 @@ if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 				target_link_options(PerformanceTest PUBLIC "SHELL:--preload-file ${PHYSICS_REPO_ROOT}/Assets/terrain2.bof@/Assets/terrain2.bof")
 				target_link_options(PerformanceTest PUBLIC -sSTACK_SIZE=1048576 -sINITIAL_MEMORY=134217728)
 			endif()
+			if (NINTENDO_SWITCH)
+				# Stage only the assets used by the default RagdollScene in the NRO's RomFS.
+				set(PERFORMANCE_TEST_ROMFS "${CMAKE_CURRENT_BINARY_DIR}/PerformanceTestRomFS")
+				file(MAKE_DIRECTORY "${PERFORMANCE_TEST_ROMFS}/Assets/Human")
+				configure_file("${PHYSICS_REPO_ROOT}/Assets/Human.tof" "${PERFORMANCE_TEST_ROMFS}/Assets/Human.tof" COPYONLY)
+				configure_file("${PHYSICS_REPO_ROOT}/Assets/Human/dead_pose1.tof" "${PERFORMANCE_TEST_ROMFS}/Assets/Human/dead_pose1.tof" COPYONLY)
+				configure_file("${PHYSICS_REPO_ROOT}/Assets/terrain2.bof" "${PERFORMANCE_TEST_ROMFS}/Assets/terrain2.bof" COPYONLY)
+
+				set(PERFORMANCE_TEST_NACP "${CMAKE_CURRENT_BINARY_DIR}/PerformanceTest.nacp")
+				nx_generate_nacp(
+					OUTPUT "${PERFORMANCE_TEST_NACP}"
+					NAME "Jolt Physics Performance Test"
+					AUTHOR "Jolt Physics"
+					VERSION "${PROJECT_VERSION}")
+				nx_create_nro(PerformanceTest NACP "${PERFORMANCE_TEST_NACP}" ROMFS "${PERFORMANCE_TEST_ROMFS}")
+			endif()
 			set_property(TARGET PerformanceTest PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${PHYSICS_REPO_ROOT}")
 		endif()
 	endif()

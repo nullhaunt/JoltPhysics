@@ -18,6 +18,9 @@
 	#include <Jolt/Renderer/DebugRendererRecorder.h>
 	#include <Jolt/Core/StreamWrapper.h>
 #endif // JPH_DEBUG_RENDERER
+#ifdef JPH_PLATFORM_SWITCH
+	#include <switch.h>
+#endif // JPH_PLATFORM_SWITCH
 #ifdef JPH_PLATFORM_ANDROID
 #include <android/log.h>
 #include <android_native_app_glue.h>
@@ -49,6 +52,54 @@ JPH_SUPPRESS_WARNINGS
 #include "MaxBodiesScene.h"
 #include "HighSpeedScene.h"
 
+#ifdef JPH_PLATFORM_SWITCH
+
+class SwitchRuntime
+{
+public:
+							SwitchRuntime()
+	{
+		consoleInit(nullptr);
+		padConfigureInput(1, HidNpadStyleSet_NpadStandard);
+		padInitializeDefault(&mPad);
+
+		cout << "Jolt Physics Performance Test" << endl;
+		::Result result = romfsInit();
+		mRomFSInitialized = R_SUCCEEDED(result);
+		if (!mRomFSInitialized)
+			cout << "Unable to mount RomFS: 0x" << hex << result << dec << endl;
+		consoleUpdate(nullptr);
+	}
+
+							~SwitchRuntime()
+	{
+		cout << endl << "Press + to exit." << endl;
+		while (appletMainLoop())
+		{
+			padUpdate(&mPad);
+			if ((padGetButtonsDown(&mPad) & HidNpadButton_Plus) != 0)
+				break;
+
+			consoleUpdate(nullptr);
+		}
+
+		if (mRomFSInitialized)
+			romfsExit();
+		consoleExit(nullptr);
+	}
+
+	bool					IsReady() const
+	{
+		return mRomFSInitialized;
+	}
+
+private:
+	PadState				mPad { };
+	bool					mRomFSInitialized = false;
+};
+
+#endif // JPH_PLATFORM_SWITCH
+
 // Time step for physics
 constexpr float cDeltaTime = 1.0f / 60.0f;
 
@@ -67,11 +118,20 @@ static void TraceImpl(const char *inFMT, ...)
 #else
 	__android_log_write(ANDROID_LOG_INFO, "Jolt", buffer);
 #endif
+#ifdef JPH_PLATFORM_SWITCH
+	consoleUpdate(nullptr);
+#endif // JPH_PLATFORM_SWITCH
 }
 
 // Program entry point
 int main(int argc, char** argv)
 {
+#ifdef JPH_PLATFORM_SWITCH
+	SwitchRuntime switch_runtime;
+	if (!switch_runtime.IsReady())
+		return 1;
+#endif // JPH_PLATFORM_SWITCH
+
 	// Install callbacks
 	Trace = TraceImpl;
 
@@ -88,6 +148,8 @@ int main(int argc, char** argv)
 	// Parse command line parameters
 	int specified_quality = -1;
 	int specified_threads = -1;
+	const uint detected_thread_count = thread::hardware_concurrency();
+	const uint available_thread_count = detected_thread_count > 0? detected_thread_count : 1;
 	uint max_iterations = 500;
 	bool disable_sleep = false;
 	bool enable_profiler = false;
@@ -152,7 +214,7 @@ int main(int argc, char** argv)
 		else if (strncmp(arg, "-t=max", 6) == 0)
 		{
 			// Default to number of threads on the system
-			specified_threads = thread::hardware_concurrency();
+			specified_threads = available_thread_count;
 		}
 		else if (strncmp(arg, "-t=", 3) == 0)
 		{
@@ -235,6 +297,9 @@ int main(int argc, char** argv)
 	TempAllocatorImpl temp_allocator(scene->GetTempAllocatorSizeMB() * 1024 * 1024);
 
 	// Find the asset path
+#ifdef JPH_PLATFORM_SWITCH
+	String asset_path_string = "romfs:/Assets/";
+#else
 	bool found = false;
 	filesystem::path asset_path(argv[0]);
 	filesystem::path root_path = asset_path.root_path();
@@ -262,9 +327,11 @@ int main(int argc, char** argv)
 	else
 		asset_path /= "Assets";
 	asset_path /= "";
+	String asset_path_string(asset_path.string());
+#endif // JPH_PLATFORM_SWITCH
 
 	// Load the scene
-	if (!scene->Load(String(asset_path.string())))
+	if (!scene->Load(asset_path_string))
 		return 1;
 
 	// Create mapping table from object layer to broadphase layer
@@ -304,7 +371,7 @@ int main(int argc, char** argv)
 			if (specified_threads > 0)
 				thread_permutations.push_back((uint)specified_threads - 1);
 			else
-				for (uint num_threads = 0; num_threads < thread::hardware_concurrency(); ++num_threads)
+				for (uint num_threads = 0; num_threads < available_thread_count; ++num_threads)
 					thread_permutations.push_back(num_threads);
 
 			// Test thread permutations
@@ -509,6 +576,10 @@ int main(int argc, char** argv)
 
 	// End profiling this program
 	JPH_PROFILE_END();
+
+#ifdef JPH_PLATFORM_SWITCH
+	Trace("Performance test complete.");
+#endif // JPH_PLATFORM_SWITCH
 
 	return 0;
 }
